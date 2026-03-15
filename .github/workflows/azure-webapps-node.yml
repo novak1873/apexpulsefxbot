@@ -1,25 +1,35 @@
+// bot-deploy.js
 const TelegramBot = require('node-telegram-bot-api');
-const fetch = require('node-fetch'); // or built-in fetch if using Node 18+
+const fetch = require('node-fetch'); // Node 18+ has built-in fetch
+require('dotenv').config();
 
-// Your ApexPulseFXbot token
-const BOT_TOKEN = '7798611667:AAELC-l9KlM0rBWfPcyHWrngXoRKdyELrm';
-const CHAT_ID = '2146088284'; // your Telegram chat ID
+// ------------------------
+// Telegram / Bot Settings
+// ------------------------
+const BOT_TOKEN = process.env.APEX_BOT_TOKEN; // e.g., 7798611667:AAELC-l9KlM0rBWfPcyHWrngXoRKdyELrm
+const ALLOWED_CHATS = [
+  { id: '2575121493', username: 'apexpulsefx' },
+  { id: '2146088284', username: 'Patrick' }
+];
 
-// GitHub info
-const GITHUB_TOKEN = '<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>'; // repo access token
-const REPO_OWNER = '<your-github-username>';
-const REPO_NAME = '<your-repo-name>';
+// ------------------------
+// GitHub Settings
+// ------------------------
+const GITHUB_TOKEN = process.env.GITHUB_PERSONAL_ACCESS_TOKEN; // GitHub token with repo permissions
+const REPO_OWNER = process.env.GITHUB_OWNER;                    // GitHub username or org
+const REPO_NAME = process.env.GITHUB_REPO;                      // Repo name with workflow
 
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
 bot.onText(/\/deploy/, async (msg) => {
-  const chatId = msg.chat.id;
+  const chatId = msg.chat.id.toString();
+  const chatUser = ALLOWED_CHATS.find(c => c.id === chatId);
 
-  if (chatId.toString() !== CHAT_ID) {
-    return; // Only allow your chat
+  if (!chatUser) {
+    return bot.sendMessage(chatId, "❌ You are not authorized to trigger deployments.");
   }
 
-  bot.sendMessage(chatId, "🚀 Deployment triggered via ApexPulseFXbot...");
+  bot.sendMessage(chatId, `🚀 Deployment triggered by @${chatUser.username}...`);
 
   try {
     const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
@@ -34,12 +44,12 @@ bot.onText(/\/deploy/, async (msg) => {
     });
 
     if (response.ok) {
-      bot.sendMessage(chatId, "✅ Deployment workflow successfully triggered!");
+      bot.sendMessage(chatId, `✅ Deployment workflow successfully triggered for ${REPO_NAME}!`);
     } else {
       const text = await response.text();
       bot.sendMessage(chatId, `❌ Failed to trigger workflow: ${text}`);
     }
   } catch (err) {
-    bot.sendMessage(chatId, `❌ Error: ${err.message}`);
+    bot.sendMessage(chatId, `❌ Error triggering workflow: ${err.message}`);
   }
 });
