@@ -1,77 +1,45 @@
-name: Azure Node.js CI/CD with ApexPulseFXbot
+const TelegramBot = require('node-telegram-bot-api');
+const fetch = require('node-fetch'); // or built-in fetch if using Node 18+
 
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-  repository_dispatch:
-    types: [ deploy_from_bot ]
+// Your ApexPulseFXbot token
+const BOT_TOKEN = '7798611667:AAELC-l9KlM0rBWfPcyHWrngXoRKdyELrm';
+const CHAT_ID = '2146088284'; // your Telegram chat ID
 
-env:
-  AZURE_WEBAPP_NAME: apexpulsefx-webapp       # your Azure Web App name
-  AZURE_WEBAPP_PACKAGE_PATH: '.'              # path to your Node.js app
-  NODE_VERSION: '20.x'
-  TELEGRAM_BOT_TOKEN: ${{ secrets.APEX_BOT_TOKEN }}   # ApexPulseFXbot token
-  TELEGRAM_CHAT_ID: ${{ secrets.APEX_CHAT_ID }}       # Telegram chat ID
+// GitHub info
+const GITHUB_TOKEN = '<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>'; // repo access token
+const REPO_OWNER = '<your-github-username>';
+const REPO_NAME = '<your-repo-name>';
 
-permissions:
-  contents: read
+const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+bot.onText(/\/deploy/, async (msg) => {
+  const chatId = msg.chat.id;
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+  if (chatId.toString() !== CHAT_ID) {
+    return; // Only allow your chat
+  }
 
-      - name: Install dependencies, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+  bot.sendMessage(chatId, "🚀 Deployment triggered via ApexPulseFXbot...");
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: .
+  try {
+    const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github+json'
+      },
+      body: JSON.stringify({
+        event_type: 'deploy_from_bot'
+      })
+    });
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Development'
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-
-      - name: Notify ApexPulseFXbot on success
-        if: success()
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
-            -d text="✅ Deployment successful for ${{ env.AZURE_WEBAPP_NAME }}."
-
-      - name: Notify ApexPulseFXbot on failure
-        if: failure()
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ env.TELEGRAM_CHAT_ID }}" \
-            -d text="❌ Deployment FAILED for ${{ env.AZURE_WEBAPP_NAME }}."
-concurrency:
-  
+    if (response.ok) {
+      bot.sendMessage(chatId, "✅ Deployment workflow successfully triggered!");
+    } else {
+      const text = await response.text();
+      bot.sendMessage(chatId, `❌ Failed to trigger workflow: ${text}`);
+    }
+  } catch (err) {
+    bot.sendMessage(chatId, `❌ Error: ${err.message}`);
+  }
+});
