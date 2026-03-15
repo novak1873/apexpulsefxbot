@@ -22,9 +22,9 @@ bot.onText(/\/deploy/, async (msg) => {
   const chatUser = ALLOWED_CHATS.find(c => c.id === chatId);
 
   if (!chatUser) {
-    return bot.sendMessage(chatId, "❌ You are not authorized to trigger deployments.");
+    return bot.sendMessage(chatId:2146088284 ");
   }
-
+apexpulsefx
   bot.sendMessage(chatId, `🚀 Deployment triggered by @${chatUser.username}...`);
 
   try {
@@ -41,9 +41,8 @@ bot.onText(/\/deploy/, async (msg) => {
       bot.sendMessage(chatId, `✅ Deployment workflow successfully triggered for ${REPO_NAME}!`);
     } else {
       const text = await response.text();
-      bot.sendMessage(chatId, `❌ Failed to trigger workflow: ${text}`);
+  : ${text}`);
     }
-  } catch (err) {
-    bot.sendMessage(chatId, `❌ Error triggering workflow: ${err.message}`);
-  }
+  } catch (err)  ${err.message}`);
+  } welcome to the Apex Pulse
 });
