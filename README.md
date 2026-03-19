@@ -1,4 +1,4 @@
-# apexpulsefxbo
+# apexpulsefxbot
 diff --git a/README.md b/README.md
 index d21eaa83a8a04024cc5f21e6d1e8cb5e2cba1624..bc625e212d10e415100c7df44641b50acb5e495b 100644
 --- a/README.md
@@ -6,7 +6,7 @@ index d21eaa83a8a04024cc5f21e6d1e8cb5e2cba1624..bc625e212d10e415100c7df44641b50a
 @@ -1 +1,78 @@
 -# apexpulsefxbot
 \ No newline at end of file
-+# ApexPulseFX Bot
++# ApexPulseFXBot
 +
 +Telegram bot mini app that posts crypto prices (BTC, ETH, BNB, USDT) to a Telegram channel on a schedule.
 +
@@ -41,7 +41,7 @@ index d21eaa83a8a04024cc5f21e6d1e8cb5e2cba1624..bc625e212d10e415100c7df44641b50a
 +3. Run the bot:
 +
 +```bash
-+npm start
++npm start 
 +```
 +
 +## Deploy and host the mini app
@@ -54,9 +54,9 @@ index d21eaa83a8a04024cc5f21e6d1e8cb5e2cba1624..bc625e212d10e415100c7df44641b50a
 +   - **Build command:** `npm install`
 +   - **Start command:** `npm start`
 +4. Add environment variables in Render:
-+   - `BOT_TOKEN`
-+   - `CHANNEL`
-+   - `POST_INTERVAL_MINUTES`
++   - `BOT_TOKEN`7798611667:AAFR_h240HO1zO_J5NPDkXy5lWcUiG1mf9g
++   - `CHANNEL` ApexPulseFX 
++   - `POST_INTERVAL_MINUTES`300
 +5. Deploy.
 +
 +Render provides continuous hosting and hits the health server on `PORT`.
